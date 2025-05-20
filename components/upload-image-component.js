@@ -66,7 +66,9 @@ export function renderUploadImageComponent({ element, onImageUrlChange }) {
           .catch(() => {
             labelEl.removeAttribute("disabled");
             labelEl.textContent = "Выберите фото";
-            alert("Не удалось загрузить изображение");
+            alert(
+              "Не удалось загрузить. Убедитесь, что изображение весит до 5МБ."
+            );
           });
       }
     });
