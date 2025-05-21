@@ -69,6 +69,7 @@ export function renderUploadImageComponent({ element, onImageUrlChange }) {
             alert(
               "Не удалось загрузить. Убедитесь, что изображение весит до 5МБ."
             );
+            render();
           });
       }
     });
