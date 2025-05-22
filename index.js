@@ -18,7 +18,6 @@ import {
 
 export let user = getUserFromLocalStorage();
 export let page = null;
-export let posts = [];
 
 const getToken = () => {
   const token = user ? `Bearer ${user.token}` : undefined;
@@ -53,31 +52,16 @@ export const goToPage = (newPage, data) => {
     if (newPage === POSTS_PAGE) {
       page = LOADING_PAGE;
       renderApp();
-
-      return getPosts({ token: getToken() })
-        .then((newPosts) => {
-          page = POSTS_PAGE;
-          posts = newPosts;
-          renderApp();
-        })
-        .catch((error) => {
-          console.error("Ошибка загрузки постов:", error);
-          page = POSTS_PAGE;
-          posts = [];
-          renderApp(); // просто перерисовать страницу, без повторного fetch
-        });
     }
 
     if (newPage === USER_POSTS_PAGE) {
       // @@TODO: реализовать получение постов юзера из API
-      console.log("Открываю страницу пользователя: ", data.userId);
       page = USER_POSTS_PAGE;
-      posts = [];
-      return renderApp();
+      return renderApp(data);
     }
 
     page = newPage;
-    renderApp();
+    renderApp(data);
 
     return;
   }
@@ -85,7 +69,7 @@ export const goToPage = (newPage, data) => {
   throw new Error("страницы не существует");
 };
 
-const renderApp = () => {
+const renderApp = (data) => {
   const appEl = document.getElementById("app");
   if (page === LOADING_PAGE) {
     return renderLoadingPageComponent({
@@ -137,13 +121,19 @@ const renderApp = () => {
   if (page === POSTS_PAGE) {
     return renderPostsPageComponent({
       appEl,
+      token: getToken(),
+      user,
     });
   }
 
   if (page === USER_POSTS_PAGE) {
     // @TODO: реализовать страницу с фотографиями отдельного пользвателя
-    appEl.innerHTML = "Здесь будет страница фотографий пользователя";
-    return;
+    return renderPostsPageComponent({
+      appEl,
+      userId: data.userId, // Передаем userId из data
+      token: getToken(), // Передаем токен
+      user,
+    });
   }
 };
 

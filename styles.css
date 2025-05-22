@@ -275,3 +275,92 @@
 .file-upload-remove-button:hover {
   background-color: #b02a37;
 }
+
+@keyframes like-pop {
+  0% {
+    transform: scale(1);
+  }
+  30% {
+    transform: scale(1.4);
+  }
+  60% {
+    transform: scale(0.9);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.like-button img.animate-like {
+  animation: like-pop 1s ease;
+}
+
+.post-likes {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.post-likes-text {
+  position: relative;
+  cursor: default;
+}
+
+/* Стили для всплывающего списка имен (тултипа) */
+.likes-tooltip {
+  display: none;
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 150px;
+  max-width: 300px;
+  padding: 8px 12px;
+  background-color: #ffffff;
+  color: #333333;
+  border: 1px solid #cccccc;
+  border-radius: 4px;
+  font-size: 13px;
+  text-align: center;
+  white-space: normal;
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+
+.post-likes-text:hover .likes-tooltip {
+  display: block;
+}
+
+.post-header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  margin-bottom: 10px;
+}
+
+.post-header__info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex: 1;
+  margin-left: 10px;
+}
+
+.delete-button {
+  margin-left: auto;
+  background-color: #ff4d4f;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.delete-button:hover {
+  background-color: #d9363e;
+}
