@@ -1,6 +1,6 @@
 // Замени на свой, чтобы получить независимый от других набор данных.
 // "боевая" версия инстапро лежит в ключе prod
-const personalKey = "prod";
+const personalKey = "polina-zheganova";
 const baseHost = "https://webdev-hw-api.vercel.app";
 const postsHost = `${baseHost}/api/v1/${personalKey}/instapro`;
 
@@ -60,10 +60,139 @@ export function uploadImage({ file }) {
   const data = new FormData();
   data.append("file", file);
 
-  return fetch(baseHost + "/api/upload/image", {
+  return fetch("https://wedev-api.sky.pro/api/upload/image", {
     method: "POST",
     body: data,
   }).then((response) => {
+    if (!response.ok) {
+      throw new Error("Ошибка загрузки изображения.");
+    }
     return response.json();
   });
 }
+
+export const addPost = ({ description, imageUrl, token }) => {
+  return fetch(postsHost, {
+    method: "POST",
+    headers: {
+      Authorization: token,
+    },
+    body: JSON.stringify({
+      description,
+      imageUrl,
+    }),
+  }).then((response) => {
+    if (response.status === 500) {
+      throw new Error("Ошибка сервера");
+    }
+
+    if (response.status === 400) {
+      throw new Error("Неверный запрос.");
+    }
+
+    if (response.status === 201) {
+      return response.json();
+    }
+
+    throw new Error("Неизвестная ошибка");
+  });
+};
+
+export function getUserPosts({ userId, token }) {
+  return fetch(`${postsHost}/user-posts/${userId}`, {
+    method: "GET",
+    headers: {
+      Authorization: token,
+    },
+  })
+    .then((response) => {
+      if (response.status === 401) {
+        throw new Error("Нет авторизации");
+      }
+      if (response.status === 404) {
+        throw new Error("Пользователь не найден");
+      }
+      return response.json();
+    })
+    .then((data) => {
+      return data.posts; // Предполагаем, что API возвращает посты в data.posts
+    });
+}
+
+// Функция для лайка поста
+export function likePost({ postId, token }) {
+  return fetch(`${postsHost}/${postId}/like`, {
+    method: "POST",
+    headers: {
+      Authorization: token,
+    },
+  })
+    .then((response) => {
+      if (response.status === 401) {
+        throw new Error("Пожалуйста, авторизуйтесь");
+      }
+      if (!response.ok) {
+        throw new Error("Ошибка при попытке поставить лайк");
+      }
+      return response.json();
+    })
+    .then((data) => {
+      return data.post;
+    });
+}
+
+// Функция для дизлайка поста
+export function dislikePost({ postId, token }) {
+  return fetch(`${postsHost}/${postId}/dislike`, {
+    method: "POST",
+    headers: {
+      Authorization: token,
+    },
+  })
+    .then((response) => {
+      if (response.status === 401) {
+        throw new Error("Пожалуйста, авторизуйтесь");
+      }
+      if (!response.ok) {
+        throw new Error("Ошибка при попытке убрать лайк");
+      }
+      return response.json();
+    })
+    .then((data) => {
+      return data.post;
+    });
+}
+
+export const deletePost = ({ postId, token }) => {
+  return fetch(`${postsHost}/${postId}`, {
+    method: "DELETE",
+    headers: {
+      Authorization: token,
+    },
+  })
+    .then((response) => {
+      if (!response.ok) {
+        return response
+          .json()
+          .then((err) => {
+            throw new Error(err.message || "Не удалось удалить пост");
+          })
+          .catch(() => {
+            // Если ответ не JSON, или парсинг не удался
+            throw new Error(
+              `Ошибка ${response.status}: ${
+                response.statusText || "Неизвестная ошибка"
+              }`
+            );
+          });
+      }
+      return response.json();
+    })
+    .then((data) => {
+      if (data.result === "ok") {
+        return data;
+      } else {
+        throw new Error("Неожиданный ответ сервера при удалении поста");
+      }
+    });
+};
