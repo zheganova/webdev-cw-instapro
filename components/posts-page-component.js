@@ -69,6 +69,7 @@ export function renderPostsPageComponent({
   // @TODO: реализовать рендер постов из api
 
   let currentPosts = [];
+  let postIdToAnimate = null;
 
   // Функция для получения постов (всех или пользователя)
   const fetchAndRenderPosts = () => {
@@ -95,18 +96,18 @@ export function renderPostsPageComponent({
   const renderPageContent = () => {
     const postsHtml = currentPosts
       .map((post) => {
-        const isLikedByUser = post.likes.some(
-          (like) => user && like.userId === user.id
-        );
+        const currentUserId = user ? user.id || user._id : null;
+        const isLikedByUser = post.isLiked;
 
         const likedByNames = post.likes
           .map((like) => escapeHtml(like.name))
           .join(", ");
 
-        console.log("user.id:", user.id);
-        console.log("post.user.id:", post.user.id);
-
-        const canDelete = user && user._id === post.user.id && userId === user._id;
+        const canDelete =
+          currentUserId &&
+          String(currentUserId) === String(post.user.id) &&
+          userId !== null;
+        const animateClass = postIdToAnimate === post.id ? " animate-like" : "";
 
         return `
         <li class="post">
@@ -132,7 +133,7 @@ export function renderPostsPageComponent({
             }" data-is-liked="${isLikedByUser}" class="like-button">
               <img src="./assets/images/like-${
                 isLikedByUser ? "active" : "not-active"
-              }.svg">
+              }.svg" class="like-icon${animateClass}">
             </button>
             <p class="post-likes-text">
               Нравится: <strong>${post.likes.length}</strong>
@@ -193,6 +194,18 @@ export function renderPostsPageComponent({
       });
     }
 
+    if (postIdToAnimate) {
+      const animatedImage = document.querySelector(
+        `.like-button[data-post-id="${postIdToAnimate}"] .like-icon`
+      );
+      if (animatedImage) {
+        setTimeout(() => {
+          animatedImage.classList.remove("animate-like");
+          postIdToAnimate = null; // Сбросим флаг, чтобы не анимировать повторно
+        }, 1000);
+      }
+    }
+
     // Добавляем обработчики для кнопок лайков
     for (let likeButton of document.querySelectorAll(".like-button")) {
       likeButton.addEventListener("click", (event) => {
@@ -204,10 +217,10 @@ export function renderPostsPageComponent({
         }
 
         const postId = likeButton.dataset.postId;
-        const isLiked = likeButton.dataset.isLiked === "true";
+        const isCurrentlyLiked = likeButton.dataset.isLiked === "true";
 
         // Выбираем правильный API-запрос (лайк или дизлайк)
-        const action = isLiked ? dislikePost : likePost;
+        const action = isCurrentlyLiked ? dislikePost : likePost;
 
         action({ postId, token })
           .then((updatedPost) => {
@@ -217,6 +230,7 @@ export function renderPostsPageComponent({
             );
             if (index !== -1) {
               currentPosts[index] = updatedPost; // Заменяем старый пост на обновленный
+              postIdToAnimate = updatedPost.id;
               renderPageContent(); // Перерисовываем страницу, чтобы обновить лайки и счетчик
             }
           })
@@ -224,7 +238,7 @@ export function renderPostsPageComponent({
             console.error("Ошибка при работе с лайками:", error);
             if (
               error.message === "Нет авторизации для лайка" ||
-              error.message === "Нет авторизации для дизлайка"
+              error.message === "Нет авторизации"
             ) {
               alert("Для лайка/дизлайка необходима авторизация.");
               goToPage(AUTH_PAGE);
