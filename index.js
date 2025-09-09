@@ -1,4 +1,4 @@
-import { getPosts } from "./api.js";
+import { getPosts, addPost } from "./api.js";
 import { renderAddPostPageComponent } from "./components/add-post-page-component.js";
 import { renderAuthPageComponent } from "./components/auth-page-component.js";
 import {
@@ -61,8 +61,10 @@ export const goToPage = (newPage, data) => {
           renderApp();
         })
         .catch((error) => {
-          console.error(error);
-          goToPage(POSTS_PAGE);
+          console.error("Ошибка загрузки постов:", error);
+          page = POSTS_PAGE;
+          posts = [];
+          renderApp(); // просто перерисовать страницу, без повторного fetch
         });
     }
 
@@ -111,8 +113,23 @@ const renderApp = () => {
       appEl,
       onAddPostClick({ description, imageUrl }) {
         // @TODO: реализовать добавление поста в API
-        console.log("Добавляю пост...", { description, imageUrl });
-        goToPage(POSTS_PAGE);
+        addPost({ description, imageUrl, token: getToken() })
+          .then(() => {
+            goToPage(POSTS_PAGE);
+          })
+          .catch((error) => {
+            if (error.message === "Failed to fetch") {
+              alert("Нет интернета, попробуйте снова");
+            }
+
+            if (error.message === "Ошибка сервера") {
+              alert("Сервер сломался, попробуй позже");
+            }
+
+            if (error.message === "Неверный запрос") {
+              alert("Убедитесь, что вы заполнили все поля");
+            }
+          });
       },
     });
   }
